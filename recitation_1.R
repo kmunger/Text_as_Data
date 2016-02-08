@@ -51,6 +51,7 @@ full_dfm<-dfm(speeches$texts, ignoredFeatures = stopwords("english"))
 
 topfeatures(full_dfm)
 
+plot(full_dfm)
 
 ##weighting--tfidf
 
@@ -59,6 +60,7 @@ weighted<-tfidf(full_dfm)
 
 
 topfeatures(weighted)
+
 
 ##Think about what this means!
 
@@ -72,11 +74,8 @@ topfeatures(normalized)
 collocations(last_speech_text)
 
 
-?collocations
 
 collocations(last_speech_text, size=3)
-
-
 
 ## detect collocations in overall
 
@@ -87,4 +86,28 @@ colloc <- collocations(last_speech_text)
 isStopwordList <- lapply(colloc$word1, `%in%`, stopwords("english"))
 stopwordindex <- which(colloc$word1 %in% stopwords("english")| colloc$word2 %in% stopwords("english"))
 colloc[-stopwordindex]  # collocations not containing stopwords
+
+
+##now let's take a little look at regular expressions
+
+# regular expressions are a very powerful tool in wrangling text
+# not a focus of this class, but something to be aware of
+
+?regex
+
+s_index<-grep(" s ", speeches$texts )
+
+?grep
+
+grep(" s ", speeches$texts, value=TRUE )
+
+
+s_index<-grep(" s ", speeches$texts )
+
+
+
+no_s<-gsub(" s ", "",  speeches$texts[s_index] )
+
+
+
 
