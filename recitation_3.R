@@ -12,7 +12,7 @@ library(quanteda)
 
 
 ##load in data
-data("iebudgetsCorpus", package = "quantedaData")
+data(iebudgetsCorpus, package = "quantedaData")
 
 
 df <- texts(iebudgetsCorpus)
@@ -114,6 +114,30 @@ cor(readability(iebudgetsCorpus, c("Flesch", "Dale.Chall", "SMOG", "Coleman.Liau
 
 
 ####Bootstrapping!
+
+# remove smaller parties
+iebudgetsCorpSub <- subset(iebudgetsCorpus, !(party %in% c("WUAG", "SOC", "PBPA" )))
+
+library(boot)
+bsReadabilityByGroup <- function(x, i, groups = NULL, measure = "Flesch")
+    readability(texts(x[i], groups = groups), measure)
+R <- 50
+
+# by party
+groups <- factor(iebudgetsCorpSub[["party"]])
+b <- boot(texts(iebudgetsCorpSub), bsReadabilityByGroup, strata = groups, R = R, groups = groups)
+colnames(b$t) <- names(b$t0)
+apply(b$t, 2, quantile, c(.025, .5, .975))
+
+# by year
+groups <- factor(iebudgetsCorpSub[["year"]])
+b <- boot(texts(iebudgetsCorpSub), bsReadabilityByGroup, strata = groups, R = R, groups = groups)
+colnames(b$t) <- names(b$t0)
+apply(b$t, 2, quantile, c(.025, .5, .975))
+
+## can get the SEs the same way, from b$t
+
+
 
 
 #Let's consider the different speeches by different parties/years, say we want to get standard errors on Flesch scores
