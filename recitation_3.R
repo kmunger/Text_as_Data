@@ -202,7 +202,7 @@ points(coefs, y.axis+2*adjust,pch=21,cex=.8, bg="white")
 ##real world data
 table(df$year)
 
-aggregate(df$read_FRE, by=list(df$year), FUN=mean)
+observed<-aggregate(df$read_FRE, by=list(df$year), FUN=mean)
 
 
 ###Plot results--party
