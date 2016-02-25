@@ -5,7 +5,6 @@
 
 
 library(quanteda)
-library(quantedaData)
 
 ##load data
 
@@ -13,47 +12,53 @@ library(quantedaData)
 
 
 ##load in data
-data("iebudgetsCorpus")
+data(iebudgetsCorpus, package = "quantedaData")
 
 
-df<-data.frame(iebudgetsCorpus$documents)
+df <- texts(iebudgetsCorpus)
 
 ## Lexical diversity measures
 
 # TTR 
-tokens<-tokenize(iebudgetsCorpus, removePunct=TRUE) 
+## might want toLower(iebudgetsCorpus)
+tokens <- tokenize(iebudgetsCorpus, removePunct=TRUE) 
 
-tokenz<-lapply(tokens,  length )
+# tokenz <- lapply(tokens, length)
+tokenz <- lengths(tokens)
 
-typez<-lapply(lapply(tokens,  unique ), length)
+# typez <- lapply(lapply(tokens,  unique ), length)
+typez <- ntype(tokens)
 
-TTRz<-mapply("/",typez,tokenz,SIMPLIFY = FALSE)
+#TTRz <- mapply("/", typez, tokenz, SIMPLIFY = FALSE)
 
-df$ttr<-unlist(TTRz)
-
+# df$ttr<-unlist(TTRz)
+ttr <- typez / tokenz
 
 
 ##basic plot
 
-plot(df$ttr)
-
+#plot(df$ttr)
+plot(ttr)
 
 ## 
 
-df$year<-as.numeric(df$year)
+#df$year<-as.numeric(df$year)
 
-aggregate(df$ttr, by=list(df$year), FUN=mean)
+#aggregate(df$ttr, by=list(df$year), FUN=mean)
+aggregate(ttr, by = list(iebudgetsCorpus[["year"]]), FUN = mean)
 
-table(df$year)
-
-
-aggregate(df$ttr, by=list(df$party), FUN=mean)
+# table(df$year)
 
 
+aggregate(ttr, by = list(iebudgetsCorpus[["party"]]), FUN = mean)
 
-table(df$party)
 
 
+#table(df$party)
+
+# another way:
+lexdiv(dfm(iebudgetsCorpus, groups = "year", verbose = FALSE))
+lexdiv(dfm(iebudgetsCorpus, groups = "party", verbose = FALSE))
 
 
 ##Let's think about if it matters
@@ -65,32 +70,36 @@ table(df$party)
 
 
 ##let's look at FRE
-df$read_FRE<-readability(df$texts, "Flesch")
+#df$read_FRE<-readability(df$texts, "Flesch")
+readability(iebudgetsCorpus, "Flesch")
 
+#aggregate(df$read_FRE, by=list(df$year), FUN=mean)
+readability(texts(iebudgetsCorpus, groups = "year"), "Flesch")
 
-aggregate(df$read_FRE, by=list(df$year), FUN=mean)
+#aggregate(df$read_FRE, by=list(df$party), FUN=mean)
+readability(texts(iebudgetsCorpus, groups = "party"), "Flesch")
 
-aggregate(df$read_FRE, by=list(df$party), FUN=mean)
 
 ##Dale-Chall measure
-df$read_DC<-readability(df$texts, "Dale.Chall")
+#df$read_DC<-readability(df$texts, "Dale.Chall")
+readability(iebudgetsCorpus, "Dale.Chall")
 
 
-aggregate(df$read_DC, by=list(df$year), FUN=mean)
+#aggregate(df$read_DC, by=list(df$year), FUN=mean)
+readability(texts(iebudgetsCorpus, groups = "year"), "Dale.Chall")
 
-aggregate(df$read_DC, by=list(df$party), FUN=mean)
+#aggregate(df$read_DC, by=list(df$party), FUN=mean)
+readability(texts(iebudgetsCorpus, groups = "party"), "Dale.Chall")
 
 ##let's look at all of em
 
-read<-readability(df$texts)
+#read<-readability(df$texts)
 
-cor(read$Flesch, read$Dale.Chall)
+cor(readability(iebudgetsCorpus, c("Flesch", "Dale.Chall", "SMOG", "Coleman.Liau", "Fucks")))
 
-cor(read$Flesch, read$SMOG)
+#cor(read$Flesch, read$SMOG)
 
-cor(read$Coleman.Liau, read$Dale.Chall)
-
-
+#cor(read$Coleman.Liau, read$Dale.Chall)
 
 
 
@@ -99,10 +108,36 @@ cor(read$Coleman.Liau, read$Dale.Chall)
 
 
 
-cor(read$Fucks, read$Dale.Chall)
+
+
+# cor(read$Fucks, read$Dale.Chall)
 
 
 ####Bootstrapping!
+
+# remove smaller parties
+iebudgetsCorpSub <- subset(iebudgetsCorpus, !(party %in% c("WUAG", "SOC", "PBPA" )))
+
+library(boot)
+bsReadabilityByGroup <- function(x, i, groups = NULL, measure = "Flesch")
+    readability(texts(x[i], groups = groups), measure)
+R <- 50
+
+# by party
+groups <- factor(iebudgetsCorpSub[["party"]])
+b <- boot(texts(iebudgetsCorpSub), bsReadabilityByGroup, strata = groups, R = R, groups = groups)
+colnames(b$t) <- names(b$t0)
+apply(b$t, 2, quantile, c(.025, .5, .975))
+
+# by year
+groups <- factor(iebudgetsCorpSub[["year"]])
+b <- boot(texts(iebudgetsCorpSub), bsReadabilityByGroup, strata = groups, R = R, groups = groups)
+colnames(b$t) <- names(b$t0)
+apply(b$t, 2, quantile, c(.025, .5, .975))
+
+## can get the SEs the same way, from b$t
+
+
 
 
 #Let's consider the different speeches by different parties/years, say we want to get standard errors on Flesch scores
@@ -110,12 +145,12 @@ cor(read$Fucks, read$Dale.Chall)
 library(dplyr)
 
 ##initialize data frames
-year_FRE<-data.frame(matrix(ncol = 5, nrow = 100))
+year_FRE <- data.frame(matrix(ncol = 5, nrow = 100))
 
 
 #Let's filter out the parties with only one speech
 
-df<-filter(df, party != "WUAG" & party != "SOC"  & party != "PBPA" )
+df <- filter(df, party != "WUAG" & party != "SOC"  & party != "PBPA" )
 
 party_FRE<-data.frame(matrix(ncol = 6, nrow = 100))
 

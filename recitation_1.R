@@ -5,68 +5,69 @@
 
 
 ## be sure to install the latest version from GitHub, using dev branch:
-devtools::install_github("quanteda", username="kbenoit", dependencies=TRUE, ref="dev")
+devtools::install_github("kbenoit/quanteda")
 ## and quantedaData
-devtools::install_github("quantedaData", username="kbenoit")
+devtools::install_github("kbenoit/quantedaData")
 
 library(quanteda)
-library(quantedaData)
+
 ##start with a short document
 sampletxt <- "The police with their policing strategy instituted a policy of general 
 iterations at the Data Science Institute."
 
 #Let's tokenize
-tokens<-tokenize(sampletxt)
+tokens <- tokenize(sampletxt)
 ?tokenize
 
-tokens<-tokenize(sampletxt, removePunct=TRUE)
+tokens <- tokenize(sampletxt, removePunct=TRUE)
 
 
 ## stemming examples
 
-stems<-wordstem(tokens)
+stems <- wordstem(tokens)
 ?wordstem
 
 # vector representations
 
-data("SOTUCorpus")
+data("SOTUCorpus", package = "quantedaData")
 
-speeches<-data.frame(SOTUCorpus$documents)
 
-last_speech_text<-speeches$texts[230]
+last_speech_text <- SOTUCorpus[ndoc(SOTUCorpus)]
+# same as 
+last_speech_text <- texts(SOTUCorpus)[ndoc(SOTUCorpus)]
 
-obama_dfm<-dfm(last_speech_text)
+obama_dfm <- dfm(last_speech_text)
 ?dfm
 
 ##stopwords example
 
 stopwords("english")
 
-obama_dfm<-dfm(last_speech_text, ignoredFeatures = stopwords("english"))
+obama_dfm <- dfm(last_speech_text, ignoredFeatures = stopwords("english"))
 
 
 ###full matrix of all speeches
 
-full_dfm<-dfm(speeches$texts, ignoredFeatures = stopwords("english"))
+full_dfm <- dfm(SOTUCorpus, ignoredFeatures = stopwords("english"))
 
 topfeatures(full_dfm)
 
-plot(full_dfm)
+plot(full_dfm, min.freq = 30)
 
 ##weighting--tfidf
 
 
-weighted<-tfidf(full_dfm)
+weighted_dfm <- tfidf(full_dfm)
 
 
-topfeatures(weighted)
+topfeatures(weighted_dfm)
 
 
 ##Think about what this means!
 
 
 
-normalized<-tfidf(full_dfm, normalize=TRUE)
+normalized <- tfidf(full_dfm, normalize=TRUE)
 
 topfeatures(normalized)
 
@@ -83,9 +84,10 @@ colloc <- collocations(last_speech_text)
 
 
 ## remove any collocations containing a word in the stoplist
-isStopwordList <- lapply(colloc$word1, `%in%`, stopwords("english"))
-stopwordindex <- which(colloc$word1 %in% stopwords("english")| colloc$word2 %in% stopwords("english"))
-colloc[-stopwordindex]  # collocations not containing stopwords
+# isStopwordList <- lapply(colloc$word1, `%in%`, stopwords("english"))
+# stopwordindex <- which(colloc$word1 %in% stopwords("english")| colloc$word2 %in% stopwords("english"))
+# colloc[-stopwordindex]  # collocations not containing stopwords
+removeFeatures(colloc, stopwords("english"))
 
 
 ##now let's take a little look at regular expressions
@@ -95,18 +97,19 @@ colloc[-stopwordindex]  # collocations not containing stopwords
 
 ?regex
 
-s_index<-grep(" s ", speeches$texts )
+s_index <- grep(" s ", texts(SOTUCorpus))
 
 ?grep
 
-grep(" s ", speeches$texts, value=TRUE )
+# this returns every speech that contains " s "
+grep(" s ", texts(SOTUCorpus), value=TRUE)
 
 
-s_index<-grep(" s ", speeches$texts )
+s_index <- grep(" s ", texts(SOTUCorpus))
 
 
 
-no_s<-gsub(" s ", "",  speeches$texts[s_index] )
+no_s <- gsub(" s ", "",  SOTUCorpus[s_index])
 
 
 
