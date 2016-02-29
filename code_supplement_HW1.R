@@ -33,6 +33,7 @@ predicted<-predict(snippets_pca, newdata=mystery_dfm)
 ##Fisher's linear discrimination rule: choose the group that has a closer group mean; just 2 dimensions
 
 
+##this is to determine the number of snippets per author, to divide up the results of pca
 d<-length(dickens_snippets)
 a<-length(austen_snippets)
 
@@ -43,8 +44,8 @@ austen_pc2_mean<-mean(snippets_pca$x[1:a,2])
 
 
 
-dickens_pc1_mean<-mean(snippets_pca$x[327:1033,1])
-dickens_pc2_mean<-mean(snippets_pca$x[327:1033,2])
+dickens_pc1_mean<-mean(snippets_pca$x[a:d,1])
+dickens_pc2_mean<-mean(snippets_pca$x[a:d,2])
 dickens_mean<-c(dickens_pc1_mean, dickens_pc2_mean)
 
 
