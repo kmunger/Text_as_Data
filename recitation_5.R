@@ -5,9 +5,11 @@
 ###Bullying Data---Example from Pablo Barbera's Short Course on R, NYU 2016   
 ##   https://github.com/pablobarbera/data-science-workshop
 install.packages("tm")
+install.packages("NLP")
+library(NLP)
 library(tm)
 
-setwd("C:/Users/kevin/Documents/GitHub/Text_as_Data/")
+setwd("C:/Users/k/Documents/GitHub/Text_as_Data/")
 
 
 
@@ -49,14 +51,12 @@ library(RTextTools)
 ?create_matrix
 
 
-dtm       <- create_matrix(df.tweets$text, language="english", stemWords = FALSE,
+dtm  <- create_matrix(df.tweets$text, language="english", stemWords = FALSE,
                            weighting = weightTfIdf, removePunctuation = FALSE)
 
 
 
-
-
-#####Make it all in-sample
+####Make it all in-sample
 container      <- create_container(dtm, t(df.tweets$type), trainSize=1:length(df.tweets$type),
                                     virgin=FALSE)
 
@@ -91,7 +91,7 @@ prop.table(table(df.tweets$type)) # baseline
 
 ####################Let's try again with a different kernel
 
-cv.svm <- cross_validate(container, nfold=10, algorithm = 'SVM', kernel = 'radial')
+cv.svm <- cross_validate(container, nfold=2, algorithm = 'SVM', kernel = 'radial')
 
 
 
@@ -110,7 +110,7 @@ dtm       <- create_matrix(df.tweets$text, language="english", stemWords = FALSE
 
 ###
 container      <- create_container(dtm, t(df.tweets$type), trainSize=1:training_break,
-                                   testSize=training_break:nrow(df), virgin=FALSE)
+                                   testSize=training_break:nrow(df.tweets), virgin=FALSE)
 
 
 ##validate
