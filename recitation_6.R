@@ -431,10 +431,45 @@ knn_10<-knn(train=snippets_dfm, test = mystery_dfm, cl = authors, k=10 )
 
 
 
-## Some Examples taken wholesale from Ken Benoit's NYU Dept. of Politics short course Fall 2014
-## Avaliable on his website: www.kenbenoit.net
+## Example taken from Prof. Spirling's research on Native American treatis
 
-##load data
+#predict pca results with rf of tdm
+#use all treaty types
 
-library(quanteda)
-library(quantedaData)
+rm(list=ls())
+setwd("c:/Users/kevin/Dropbox/Text_As_Data_Spring_2016_SpirlingMunger/homeworks/random_forests")
+
+#note that this data is tf-idf weighted
+
+load("treaties.rdata")
+
+#run random forest with 
+# x= the document term matrix (note odd syntax where x come first)
+# y= estimated treaty harshness
+require(randomForest)
+mod.rf<-randomForest(treaty_DTM,treaty_harshness,ntree=500,importance=T)
+?randomForest
+
+#plot variable importance
+varImpPlot(mod.rf, type=1)
+?varImpPlot
+
+
+##let's see what happens when we use way fewer trees
+
+set.seed(240)
+
+mod.rf_1<-randomForest(treaty_DTM,treaty_harshness,ntree=10,importance=T)
+
+
+
+mod.rf_2<-randomForest(treaty_DTM,treaty_harshness,ntree=10,importance=T)
+
+
+
+varImpPlot(mod.rf_1, type=1)
+varImpPlot(mod.rf_2, type=1)
+
+
+
+
